@@ -3,12 +3,10 @@ import axios from 'axios';
 
 const WeatherComponent = () => {
 
-
-
     const [latitude, setLatitude] = useState();
     const [longitude, setLongitude] = useState();
     const [forecast_days] = useState(7);
-    const [hourly] = useState("temperature_2m,weather_code,snow_depth");
+    const [hourly] = useState("temperature_2m");
     const [daily] = useState("weather_code,temperature_2m_max,temperature_2m_min,sunshine_duration");
 
     const [weatherData, setWeatherData] = useState(null);
@@ -322,6 +320,7 @@ const WeatherComponent = () => {
 
     const fetchData = () => {
         setLoading(true);
+        getLocation()
         axios.get('http://localhost:8080/api/v1/getWeatherData', {
             params: {
                 latitude,
@@ -343,7 +342,6 @@ const WeatherComponent = () => {
                 setLoading(false);
             });
     }
-    getLocation()
 
     return (
         <div className="container mx-auto min-w-96 px-4 py-8">
