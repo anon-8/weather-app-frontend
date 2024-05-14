@@ -321,7 +321,7 @@ const WeatherComponent = () => {
     const fetchData = () => {
         setLoading(true);
         getLocation()
-        axios.get('http://localhost:8080/api/v1/getWeatherData', {
+        axios.get(process.env.BACKEND_API_URL, {
             params: {
                 latitude,
                 longitude,
