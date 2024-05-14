@@ -1,318 +1,323 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const WeatherComponent = () => {
-
-    const [latitude, setLatitude] = useState("1");
-    const [longitude, setLongitude] = useState("1");
+    const [latitude, setLatitude] = useState();
+    const [longitude, setLongitude] = useState();
     const [forecast_days] = useState(7);
     const [hourly] = useState("temperature_2m");
     const [daily] = useState("weather_code,temperature_2m_max,temperature_2m_min,sunshine_duration");
-
     const [weatherData, setWeatherData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const getLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    setLatitude(latitude);
-                    setLongitude(longitude);
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                }
-            );
-        } else {
-            console.error('Geolocation is not supported by this browser.');
-        }
-    };
-    const weatherCodeData = {
+    useEffect(() => {
+        const getLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        setLatitude(latitude);
+                        setLongitude(longitude);
+                        fetchData(latitude, longitude);
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        setError('Error getting location');
+                    }
+                );
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+                setError('Geolocation is not supported by this browser.');
+            }
+        };
+        getLocation();
+    }, []);
 
+    const weatherCodeData = {
         "0":{
-        "day":{
-            "description":"Sunny",
+            "day":{
+                "description":"Sunny",
                 "image":"http://openweathermap.org/img/wn/01d@2x.png"
-        },
-        "night":{
-            "description":"Clear",
+            },
+            "night":{
+                "description":"Clear",
                 "image":"http://openweathermap.org/img/wn/01n@2x.png"
-        }
-    },
+            }
+        },
         "1":{
-        "day":{
-            "description":"Mainly Sunny",
+            "day":{
+                "description":"Mainly Sunny",
                 "image":"http://openweathermap.org/img/wn/01d@2x.png"
-        },
-        "night":{
-            "description":"Mainly Clear",
+            },
+            "night":{
+                "description":"Mainly Clear",
                 "image":"http://openweathermap.org/img/wn/01n@2x.png"
-        }
-    },
+            }
+        },
         "2":{
-        "day":{
-            "description":"Partly Cloudy",
+            "day":{
+                "description":"Partly Cloudy",
                 "image":"http://openweathermap.org/img/wn/02d@2x.png"
-        },
-        "night":{
-            "description":"Partly Cloudy",
+            },
+            "night":{
+                "description":"Partly Cloudy",
                 "image":"http://openweathermap.org/img/wn/02n@2x.png"
-        }
-    },
+            }
+        },
         "3":{
-        "day":{
-            "description":"Cloudy",
+            "day":{
+                "description":"Cloudy",
                 "image":"http://openweathermap.org/img/wn/03d@2x.png"
-        },
-        "night":{
-            "description":"Cloudy",
+            },
+            "night":{
+                "description":"Cloudy",
                 "image":"http://openweathermap.org/img/wn/03n@2x.png"
-        }
-    },
+            }
+        },
         "45":{
-        "day":{
-            "description":"Foggy",
+            "day":{
+                "description":"Foggy",
                 "image":"http://openweathermap.org/img/wn/50d@2x.png"
-        },
-        "night":{
-            "description":"Foggy",
+            },
+            "night":{
+                "description":"Foggy",
                 "image":"http://openweathermap.org/img/wn/50n@2x.png"
-        }
-    },
+            }
+        },
         "48":{
-        "day":{
-            "description":"Rime Fog",
+            "day":{
+                "description":"Rime Fog",
                 "image":"http://openweathermap.org/img/wn/50d@2x.png"
-        },
-        "night":{
-            "description":"Rime Fog",
+            },
+            "night":{
+                "description":"Rime Fog",
                 "image":"http://openweathermap.org/img/wn/50n@2x.png"
-        }
-    },
+            }
+        },
         "51":{
-        "day":{
-            "description":"Light Drizzle",
+            "day":{
+                "description":"Light Drizzle",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Light Drizzle",
+            },
+            "night":{
+                "description":"Light Drizzle",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "53":{
-        "day":{
-            "description":"Drizzle",
+            "day":{
+                "description":"Drizzle",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Drizzle",
+            },
+            "night":{
+                "description":"Drizzle",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "55":{
-        "day":{
-            "description":"Heavy Drizzle",
+            "day":{
+                "description":"Heavy Drizzle",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Heavy Drizzle",
+            },
+            "night":{
+                "description":"Heavy Drizzle",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "56":{
-        "day":{
-            "description":"Light Freezing Drizzle",
+            "day":{
+                "description":"Light Freezing Drizzle",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Light Freezing Drizzle",
+            },
+            "night":{
+                "description":"Light Freezing Drizzle",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "57":{
-        "day":{
-            "description":"Freezing Drizzle",
+            "day":{
+                "description":"Freezing Drizzle",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Freezing Drizzle",
+            },
+            "night":{
+                "description":"Freezing Drizzle",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "61":{
-        "day":{
-            "description":"Light Rain",
+            "day":{
+                "description":"Light Rain",
                 "image":"http://openweathermap.org/img/wn/10d@2x.png"
-        },
-        "night":{
-            "description":"Light Rain",
+            },
+            "night":{
+                "description":"Light Rain",
                 "image":"http://openweathermap.org/img/wn/10n@2x.png"
-        }
-    },
+            }
+        },
         "63":{
-        "day":{
-            "description":"Rain",
+            "day":{
+                "description":"Rain",
                 "image":"http://openweathermap.org/img/wn/10d@2x.png"
-        },
-        "night":{
-            "description":"Rain",
+            },
+            "night":{
+                "description":"Rain",
                 "image":"http://openweathermap.org/img/wn/10n@2x.png"
-        }
-    },
+            }
+        },
         "65":{
-        "day":{
-            "description":"Heavy Rain",
+            "day":{
+                "description":"Heavy Rain",
                 "image":"http://openweathermap.org/img/wn/10d@2x.png"
-        },
-        "night":{
-            "description":"Heavy Rain",
+            },
+            "night":{
+                "description":"Heavy Rain",
                 "image":"http://openweathermap.org/img/wn/10n@2x.png"
-        }
-    },
+            }
+        },
         "66":{
-        "day":{
-            "description":"Light Freezing Rain",
+            "day":{
+                "description":"Light Freezing Rain",
                 "image":"http://openweathermap.org/img/wn/10d@2x.png"
-        },
-        "night":{
-            "description":"Light Freezing Rain",
+            },
+            "night":{
+                "description":"Light Freezing Rain",
                 "image":"http://openweathermap.org/img/wn/10n@2x.png"
-        }
-    },
+            }
+        },
         "67":{
-        "day":{
-            "description":"Freezing Rain",
+            "day":{
+                "description":"Freezing Rain",
                 "image":"http://openweathermap.org/img/wn/10d@2x.png"
-        },
-        "night":{
-            "description":"Freezing Rain",
+            },
+            "night":{
+                "description":"Freezing Rain",
                 "image":"http://openweathermap.org/img/wn/10n@2x.png"
-        }
-    },
+            }
+        },
         "71":{
-        "day":{
-            "description":"Light Snow",
+            "day":{
+                "description":"Light Snow",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Light Snow",
+            },
+            "night":{
+                "description":"Light Snow",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "73":{
-        "day":{
-            "description":"Snow",
+            "day":{
+                "description":"Snow",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Snow",
+            },
+            "night":{
+                "description":"Snow",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "75":{
-        "day":{
-            "description":"Heavy Snow",
+            "day":{
+                "description":"Heavy Snow",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Heavy Snow",
+            },
+            "night":{
+                "description":"Heavy Snow",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "77":{
-        "day":{
-            "description":"Snow Grains",
+            "day":{
+                "description":"Snow Grains",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Snow Grains",
+            },
+            "night":{
+                "description":"Snow Grains",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "80":{
-        "day":{
-            "description":"Light Showers",
+            "day":{
+                "description":"Light Showers",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Light Showers",
+            },
+            "night":{
+                "description":"Light Showers",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "81":{
-        "day":{
-            "description":"Showers",
+            "day":{
+                "description":"Showers",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Showers",
+            },
+            "night":{
+                "description":"Showers",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "82":{
-        "day":{
-            "description":"Heavy Showers",
+            "day":{
+                "description":"Heavy Showers",
                 "image":"http://openweathermap.org/img/wn/09d@2x.png"
-        },
-        "night":{
-            "description":"Heavy Showers",
+            },
+            "night":{
+                "description":"Heavy Showers",
                 "image":"http://openweathermap.org/img/wn/09n@2x.png"
-        }
-    },
+            }
+        },
         "85":{
-        "day":{
-            "description":"Light Snow Showers",
+            "day":{
+                "description":"Light Snow Showers",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Light Snow Showers",
+            },
+            "night":{
+                "description":"Light Snow Showers",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "86":{
-        "day":{
-            "description":"Snow Showers",
+            "day":{
+                "description":"Snow Showers",
                 "image":"http://openweathermap.org/img/wn/13d@2x.png"
-        },
-        "night":{
-            "description":"Snow Showers",
+            },
+            "night":{
+                "description":"Snow Showers",
                 "image":"http://openweathermap.org/img/wn/13n@2x.png"
-        }
-    },
+            }
+        },
         "95":{
-        "day":{
-            "description":"Thunderstorm",
+            "day":{
+                "description":"Thunderstorm",
                 "image":"http://openweathermap.org/img/wn/11d@2x.png"
-        },
-        "night":{
-            "description":"Thunderstorm",
+            },
+            "night":{
+                "description":"Thunderstorm",
                 "image":"http://openweathermap.org/img/wn/11n@2x.png"
-        }
-    },
+            }
+        },
         "96":{
-        "day":{
-            "description":"Light Thunderstorms With Hail",
+            "day":{
+                "description":"Light Thunderstorms With Hail",
                 "image":"http://openweathermap.org/img/wn/11d@2x.png"
-        },
-        "night":{
-            "description":"Light Thunderstorms With Hail",
+            },
+            "night":{
+                "description":"Light Thunderstorms With Hail",
                 "image":"http://openweathermap.org/img/wn/11n@2x.png"
-        }
-    },
+            }
+        },
         "99":{
-        "day":{
-            "description":"Thunderstorm With Hail",
+            "day":{
+                "description":"Thunderstorm With Hail",
                 "image":"http://openweathermap.org/img/wn/11d@2x.png"
-        },
-        "night":{
-            "description":"Thunderstorm With Hail",
+            },
+            "night":{
+                "description":"Thunderstorm With Hail",
                 "image":"http://openweathermap.org/img/wn/11n@2x.png"
+            }
         }
-    }
-    }
+
+    };
 
     const getImageUrl = (weatherCode) => {
         return weatherCodeData[weatherCode].day.image;
@@ -320,10 +325,8 @@ const WeatherComponent = () => {
 
     const apiUrl = process.env.REACT_APP_BACKEND_API_URL;
 
-    const fetchData = () => {
+    const fetchData = (latitude, longitude) => {
         setLoading(true);
-        getLocation()
-        // https://weather-app-backend-ir07.onrender.com/api/v1/getWeatherData
         axios.get(apiUrl, {
             params: {
                 latitude,
@@ -334,7 +337,6 @@ const WeatherComponent = () => {
             }
         })
             .then(response => {
-
                 setWeatherData(response.data);
             })
             .catch(error => {
@@ -344,40 +346,33 @@ const WeatherComponent = () => {
             .finally(() => {
                 setLoading(false);
             });
-    }
+    };
 
     return (
         <div className="container mx-auto min-w-96 px-4 py-8">
-
-            <div className="flex justify-center">
-            <button onClick={fetchData} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Fetch Weather Data
-            </button>
-            </div>
-
             {loading && <p className="mt-4 text-gray-600">Loading...</p>}
             {error && <p className="mt-4 text-red-600">Error: {error}</p>}
 
             {weatherData && (
                 <div className="flex justify-center">
-                <div className="mt-8 grid grid-cols-1 sd:grid-cols-2 md:grid-cols-3 hd:grid-cols-4 fhd:grid-cols-5 wqhd:grid-cols-7  gap-8 ">
-                    {Object.keys(weatherData.dailyWeatherData).map(date => {
-                        const dayWeather = weatherData.dailyWeatherData[date];
-                        const weatherCode = dayWeather.weather_code;
-                        const imageUrl = getImageUrl(weatherCode);
-                        return (
-                            <div key={date} className="p-4 bg-gray-500 rounded min-w-72 max-w-72">
-                                <div className="flex justify-center align-middle">
-                                    <img src={imageUrl} alt="Weather icon" className="w-40 h-40"/>
+                    <div className="mt-8 grid grid-cols-1 sd:grid-cols-2 md:grid-cols-3 hd:grid-cols-4 fhd:grid-cols-5 wqhd:grid-cols-7  gap-8 ">
+                        {Object.keys(weatherData.dailyWeatherData).map(date => {
+                            const dayWeather = weatherData.dailyWeatherData[date];
+                            const weatherCode = dayWeather.weather_code;
+                            const imageUrl = getImageUrl(weatherCode);
+                            return (
+                                <div key={date} className="p-4 bg-gray-500 rounded min-w-72 max-w-72">
+                                    <div className="flex justify-center align-middle">
+                                        <img src={imageUrl} alt="Weather icon" className="w-40 h-40"/>
+                                    </div>
+                                    <h2 className="text-lg font-bold mb-4">{date}</h2>
+                                    <p className="left-1">Min Temp: {dayWeather.temperature_2m_min} °C</p>
+                                    <p>Max Temp: {dayWeather.temperature_2m_max} °C</p>
+                                    <p>Energy Generated: {dayWeather.estimatedPowerGenerated} kWh</p>
                                 </div>
-                                <h2 className="text-lg font-bold mb-4">{date}</h2>
-                                <p className="left-1">Min Temp: {dayWeather.temperature_2m_min} °C</p>
-                                <p>Max Temp: {dayWeather.temperature_2m_max} °C</p>
-                                <p>Energy Generated: {dayWeather.estimatedPowerGenerated} kWh</p>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
         </div>
