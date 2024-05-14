@@ -3,8 +3,8 @@ import axios from 'axios';
 
 const WeatherComponent = () => {
 
-    const [latitude, setLatitude] = useState();
-    const [longitude, setLongitude] = useState();
+    const [latitude, setLatitude] = useState("1");
+    const [longitude, setLongitude] = useState("1");
     const [forecast_days] = useState(7);
     const [hourly] = useState("temperature_2m");
     const [daily] = useState("weather_code,temperature_2m_max,temperature_2m_min,sunshine_duration");
@@ -318,10 +318,13 @@ const WeatherComponent = () => {
         return weatherCodeData[weatherCode].day.image;
     };
 
+    const apiUrl = process.env.REACT_APP_BACKEND_API_URL;
+
     const fetchData = () => {
         setLoading(true);
         getLocation()
-        axios.get(process.env.BACKEND_API_URL, {
+        // https://weather-app-backend-ir07.onrender.com/api/v1/getWeatherData
+        axios.get(apiUrl, {
             params: {
                 latitude,
                 longitude,
